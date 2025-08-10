@@ -1,10 +1,12 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useFocusEffect } from "@react-navigation/native";
+import { Image } from "expo-image";
 import { Link, useRouter } from "expo-router";
 import React, { useCallback, useState } from "react";
 import {
   Alert,
   FlatList,
+  Modal,
   SafeAreaView,
   ScrollView,
   StyleSheet,
@@ -19,8 +21,9 @@ interface Memo {
   title: string;
   content: string;
   category: string;
-  images?: { uri: string; tag: string; }[]; // 이미지 배열 추가
+  images?: { uri: string; tag: string }[]; // 이미지 배열 추가
   timestamp: number;
+  isLiked?: boolean; // New property for liking/pinning
 }
 
 export default function MemoListScreen() {
@@ -30,12 +33,27 @@ export default function MemoListScreen() {
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [selectedMemoIds, setSelectedMemoIds] = useState<string[]>([]); // 선택된 메모 ID
   const [isMultiSelectMode, setIsMultiSelectMode] = useState(false); // 다중 선택 모드 여부
+  const [showSearchInput, setShowSearchInput] = useState(false); // New state for search input visibility
+  const [showMenuModal, setShowMenuModal] = useState(false); // New state for menu modal visibility
 
   const loadMemos = async () => {
     try {
       const storedMemos = await AsyncStorage.getItem("memos");
       if (storedMemos) {
-        setMemos(JSON.parse(storedMemos));
+        const parsedMemos: Memo[] = JSON.parse(storedMemos);
+        // Sort memos by liked status then by timestamp in descending order
+        const sortedMemos = parsedMemos.sort((a, b) => {
+          // Prioritize liked memos
+          if (a.isLiked && !b.isLiked) {
+            return -1; // a comes before b
+          }
+          if (!a.isLiked && b.isLiked) {
+            return 1; // b comes before a
+          }
+          // If both are liked or both are not liked, sort by timestamp
+          return b.timestamp - a.timestamp;
+        });
+        setMemos(sortedMemos);
       }
     } catch (error) {
       console.error("Failed to load memos:", error);
@@ -111,6 +129,21 @@ export default function MemoListScreen() {
     );
   };
 
+  const toggleLike = async (id: string) => {
+    try {
+      const storedMemos = await AsyncStorage.getItem("memos");
+      const memos: Memo[] = storedMemos ? JSON.parse(storedMemos) : [];
+      const updatedMemos = memos.map((memo) =>
+        memo.id === id ? { ...memo, isLiked: !memo.isLiked } : memo
+      );
+      await AsyncStorage.setItem("memos", JSON.stringify(updatedMemos));
+      loadMemos(); // Reload memos to reflect sorting
+    } catch (error) {
+      console.error("Failed to toggle like status:", error);
+      Alert.alert("오류", "좋아요 상태 변경에 실패했습니다.");
+    }
+  };
+
   const renderItem = ({ item }: { item: Memo }) => (
     <TouchableOpacity
       style={[
@@ -157,19 +190,54 @@ export default function MemoListScreen() {
           {new Date(item.timestamp).toLocaleDateString()}
         </Text>
       </View>
+      <TouchableOpacity
+        style={styles.likeButton}
+        onPress={() => toggleLike(item.id)} // New handler
+      >
+        <Text style={styles.likeButtonText}>{item.isLiked ? "♥" : "♡"}</Text>{" "}
+        {/* Star icon */}
+      </TouchableOpacity>
     </TouchableOpacity>
   );
 
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.fixedHeaderContainer}>
-        <Text style={styles.header}>내 메모</Text>
-        <TextInput
-          style={styles.searchInput}
-          placeholder="메모 검색..."
-          value={searchQuery}
-          onChangeText={setSearchQuery}
-        />
+        <View style={styles.headerTopRow}>
+          <Image
+            source={require("@/assets/images/MyMemoLogo.png")}
+            style={styles.myMemoLogoImage}
+          />
+          <Text style={styles.headerTitle}>for Heagun ver.</Text>
+          <TouchableOpacity
+            style={styles.menuButton}
+            onPress={() => setShowMenuModal(true)}
+          >
+            <Image
+              source={require("@/assets/images/MenuButton.png")}
+              style={styles.menuButtonImage}
+            />
+          </TouchableOpacity>
+        </View>
+        <View style={styles.headerSearchRow}>
+          {showSearchInput && (
+            <TextInput
+              style={styles.searchInput}
+              placeholder="메모 검색..."
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+            />
+          )}
+          <TouchableOpacity
+            style={styles.searchButton}
+            onPress={() => setShowSearchInput(!showSearchInput)}
+          >
+            <Image
+              source={require("@/assets/images/SearchButton.png")}
+              style={styles.searchButtonImage}
+            />
+          </TouchableOpacity>
+        </View>
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
@@ -210,6 +278,7 @@ export default function MemoListScreen() {
           </View>
         }
         style={styles.memoList}
+        showsVerticalScrollIndicator={false} // Added
       />
       {isMultiSelectMode ? (
         <View style={styles.multiSelectButtonContainer}>
@@ -234,10 +303,40 @@ export default function MemoListScreen() {
       ) : (
         <Link href="/create" asChild>
           <TouchableOpacity style={styles.addButton}>
-            <Text style={styles.addButtonText}>+</Text>
+            <Image
+              source={require("@/assets/images/MemoButton.png")}
+              style={styles.addButtonImage}
+            />
           </TouchableOpacity>
         </Link>
       )}
+
+      <Modal
+        animationType="fade"
+        transparent={true}
+        visible={showMenuModal}
+        onRequestClose={() => setShowMenuModal(false)}
+      >
+        <View style={styles.centeredView}>
+          <View style={styles.modalView}>
+            <TouchableOpacity
+              style={styles.modalButton}
+              onPress={() => {
+                setShowMenuModal(false);
+                router.push("/calendar");
+              }}
+            >
+              <Text style={styles.modalButtonText}>Go to Calendar</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.modalCloseButton}
+              onPress={() => setShowMenuModal(false)}
+            >
+              <Text style={styles.modalCloseButtonText}>Close</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -245,21 +344,42 @@ export default function MemoListScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f0f0f0",
-    paddingTop: 20,
+    backgroundColor: "#FFEDDD",
+    paddingTop: 0,
   },
   fixedHeaderContainer: {
-    backgroundColor: "#f0f0f0",
+    backgroundColor: "#FFF5ED",
     paddingBottom: 10,
+    flexDirection: "column",
+    paddingHorizontal: 15,
   },
   memoList: {
     flex: 1,
-    backgroundColor: "#f0f0f0",
+    backgroundColor: "#FFF5ED",
+  },
+  searchButton: {
+    backgroundColor: "#fff",
+    padding: 10,
+    marginHorizontal: 15,
+    marginBottom: 10,
+    borderRadius: 10,
+    justifyContent: "center",
+    alignItems: "center",
+    elevation: 5, // Increased
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 }, // Increased height for more visible shadow
+    shadowOpacity: 0.3, // Increased
+    shadowRadius: 5, // Increased
+  },
+  searchButtonImage: {
+    width: 24, // Adjust as needed
+    height: 24, // Adjust as needed
+    resizeMode: "contain",
   },
   searchInput: {
     backgroundColor: "#fff",
     padding: 10,
-    marginHorizontal: 15,
+    marginHorizontal: 0, // Adjusted
     marginBottom: 10,
     borderRadius: 10,
     fontSize: 16,
@@ -268,22 +388,65 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.1,
     shadowRadius: 2,
+    flex: 1, // Added
+    marginRight: 10, // Added for spacing between input and button
   },
   memoCategory: {
     fontSize: 12,
-    color: "#007AFF",
+    color: "#815854", // Changed
     marginBottom: 5,
     fontWeight: "bold",
   },
   header: {
     fontSize: 28,
     fontWeight: "bold",
-    textAlign: "center",
+    // textAlign: "center",
     marginVertical: 20,
     color: "#333",
+    flex: 1,
+  },
+  headerTitle: {
+    fontSize: 20,
+    fontWeight: "bold",
+    color: "#815854",
+    flex: 1, // To take up available space between logo and menu button
+    textAlign: "center", // Center the text
+  },
+  menuButton: {
+    padding: 10,
+  },
+  menuButtonImage: {
+    width: 30,
+    height: 30,
+    resizeMode: "contain",
+  },
+  calendarButton: {
+    padding: 10,
+  },
+  calendarButtonText: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: "#815854", // Consistent with other text
+  },
+  myMemoLogoImage: {
+    width: 200, // Changed
+    height: 70, // Changed
+    resizeMode: "contain",
+    marginRight: 10, // Add some spacing
+  },
+  headerTopRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 10, // Add some spacing
+  },
+  headerSearchRow: {
+    flexDirection: "row",
+    justifyContent: "flex-end",
+    marginBottom: 10, // Add some spacing
   },
   memoItem: {
-    backgroundColor: "#fff",
+    backgroundColor: "#fff", // Changed
     padding: 15,
     marginHorizontal: 15,
     marginVertical: 8,
@@ -293,6 +456,9 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
+    borderWidth: 2, // Changed
+    borderColor: "#815854", // Added
+    borderStyle: "dashed", // Changed
   },
   memoTitle: {
     fontSize: 18,
@@ -315,35 +481,37 @@ const styles = StyleSheet.create({
     paddingHorizontal: 15,
   },
   categoryButton: {
-    backgroundColor: "#e0e0e0",
+    backgroundColor: "white", // Changed
     paddingVertical: 8,
     paddingHorizontal: 15,
     borderRadius: 20,
     marginRight: 10,
+    borderWidth: 1, // Added
+    borderColor: "#815854", // Added
   },
   selectedCategoryButton: {
-    backgroundColor: "#007AFF",
+    backgroundColor: "#815854", // Changed
   },
   categoryButtonText: {
-    color: "#333",
+    color: "#815854", // Changed
     fontSize: 14,
     fontWeight: "bold",
   },
   selectedCategoryButtonText: {
-    color: "#fff",
+    color: "#fff", // Changed
   },
   addButton: {
     position: "absolute",
     bottom: 30,
     right: 30,
-    backgroundColor: "#007AFF",
+    backgroundColor: "#F5F5DC", // Beige color
     width: 60,
     height: 60,
-    borderRadius: 30,
+    borderRadius: 15, // 15px radius
     justifyContent: "center",
     alignItems: "center",
     elevation: 5,
-    shadowColor: "#007AFF",
+    shadowColor: "#000", // Shadow color
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 5,
@@ -352,6 +520,11 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontSize: 30,
     lineHeight: 30,
+  },
+  addButtonImage: {
+    width: 40, // Adjust as needed
+    height: 40, // Adjust as needed
+    resizeMode: "contain",
   },
   emptyContainer: {
     flex: 1,
@@ -398,11 +571,9 @@ const styles = StyleSheet.create({
   memoContentContainer: {
     marginLeft: 30, // 체크박스 공간 확보
     flex: 1,
+    marginRight: 40, // Added to make space for like button
   },
   deleteButton: {
-    position: "absolute",
-    bottom: 30,
-    right: 30,
     backgroundColor: "#dc3545",
     width: 60,
     height: 60,
@@ -419,6 +590,7 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontSize: 18,
     fontWeight: "bold",
+    textAlign: "center", // Added
   },
   multiSelectButtonContainer: {
     position: "absolute",
@@ -446,5 +618,61 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontSize: 18,
     fontWeight: "bold",
+  },
+  centeredView: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(0,0,0,0.5)", // Semi-transparent overlay
+  },
+  modalView: {
+    margin: 20,
+    backgroundColor: "#F5F5DC", // Memo add button background color
+    borderRadius: 20,
+    borderWidth: 2, // Border width
+    borderColor: "#815854", // Memo list item border color
+    padding: 35,
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  modalButton: {
+    backgroundColor: "#815854", // Consistent with other buttons
+    borderRadius: 10,
+    padding: 10,
+    elevation: 2,
+    marginBottom: 10,
+  },
+  modalButtonText: {
+    color: "white",
+    fontWeight: "bold",
+    textAlign: "center",
+  },
+  modalCloseButton: {
+    backgroundColor: "#6c757d", // A neutral color for close
+    borderRadius: 10,
+    padding: 10,
+    elevation: 2,
+  },
+  modalCloseButtonText: {
+    color: "white",
+    fontWeight: "bold",
+    textAlign: "center",
+  },
+  likeButton: {
+    position: "absolute",
+    top: 8,
+    right: 10,
+    padding: 0,
+  },
+  likeButtonText: {
+    fontSize: 30,
+    color: "#A4193D", // Gold color for liked star
   },
 });

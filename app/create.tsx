@@ -159,7 +159,6 @@ export default function CreateMemoScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <Text style={styles.header}>새 메모 작성</Text>
       <KeyboardAvoidingView
         style={styles.keyboardAvoidingView}
         behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -196,7 +195,10 @@ export default function CreateMemoScreen() {
           textAlignVertical="top"
         />
         <View style={styles.buttonContainer}>
-          <TouchableOpacity style={styles.saveButton} onPress={() => saveMemo}>
+          <TouchableOpacity
+            style={styles.saveButton}
+            onPress={() => saveMemo()}
+          >
             <Text style={styles.buttonText}>저장</Text>
           </TouchableOpacity>
           <TouchableOpacity
@@ -214,13 +216,14 @@ export default function CreateMemoScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f0f0f0",
+    backgroundColor: "#F9EBDE",
     padding: 20,
     paddingTop: 40,
   },
   keyboardAvoidingView: {
     flex: 1,
     justifyContent: "center",
+    marginHorizontal: 5, // Added
   },
   header: {
     fontSize: 24,
@@ -230,35 +233,31 @@ const styles = StyleSheet.create({
     color: "#333",
   },
   titleInput: {
-    backgroundColor: "#fff",
+    backgroundColor: "transparent",
     padding: 15,
     borderRadius: 10,
     fontSize: 18,
     marginBottom: 15,
-    elevation: 2,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
+    borderWidth: 1,
+    borderColor: "#815854",
+    borderStyle: "solid",
   },
   categoryInput: {
-    backgroundColor: "#fff",
+    backgroundColor: "transparent",
     padding: 15,
     borderRadius: 10,
     fontSize: 16,
     marginBottom: 15,
-    elevation: 2,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
+    borderWidth: 1,
+    borderColor: "#815854",
+    borderStyle: "solid",
   },
   addImageButton: {
-    backgroundColor: "#007AFF",
+    backgroundColor: "#815854",
     padding: 10,
     borderRadius: 10,
     alignItems: "center",
-    marginBottom: 15,
+    marginBottom: 5,
   },
   addImageButtonText: {
     color: "#fff",
@@ -272,7 +271,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     marginRight: 10,
-    backgroundColor: "#fff",
+    backgroundColor: "#FFF5ED", // Changed
     borderRadius: 10,
     padding: 5,
     elevation: 2,
@@ -310,52 +309,42 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
   },
   contentInput: {
-    backgroundColor: "#fff",
+    backgroundColor: "transparent",
     padding: 15,
     borderRadius: 10,
     fontSize: 16,
-    height: 200,
-    marginBottom: 20,
-    elevation: 2,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
+    height: 650,
+    marginBottom: 5,
+    borderWidth: 1,
+    borderColor: "#815854",
+    borderStyle: "solid",
   },
   saveButton: {
-    backgroundColor: "#28a745",
-    padding: 15,
+    backgroundColor: "#815854",
+    padding: 10,
     borderRadius: 10,
     alignItems: "center",
     flex: 1,
     marginHorizontal: 5,
-    elevation: 3,
-    shadowColor: "#28a745",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 3,
   },
   cancelButton: {
-    backgroundColor: "#dc3545",
-    padding: 15,
+    backgroundColor: "#815854",
+    padding: 10,
     borderRadius: 10,
     alignItems: "center",
     flex: 1,
     marginHorizontal: 5,
-    elevation: 3,
-    shadowColor: "#dc3545",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 3,
   },
   buttonText: {
     color: "#fff",
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: "bold",
   },
   buttonContainer: {
     flexDirection: "row",
     justifyContent: "space-between",
     marginTop: 20,
+    marginBottom: 70,
+    marginHorizontal: 5, // Added
   },
 });

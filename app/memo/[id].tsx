@@ -45,7 +45,6 @@ export default function MemoDetailScreen() {
   const [images, setImages] = useState<ImageAsset[]>([]); // 이미지 상태 추가
   const [isEditing, setIsEditing] = useState(false);
   const [fullImageUri, setFullImageUri] = useState<string | null>(null);
-  let backPressCount = 0; // 뒤로가기 버튼 누른 횟수
 
   useEffect(() => {
     if (id) {
@@ -75,15 +74,15 @@ export default function MemoDetailScreen() {
   const pickImage = async () => {
     let result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsMultipleSelection: true, // 여러 이미지 선택 허용
+      allowsMultipleSelection: true,
       quality: 1,
     });
 
     if (!result.canceled) {
       const newImages = result.assets.map((asset) => ({
         uri: asset.uri,
-        tag: "", // 기본 태그
-        id: Date.now().toString() + Math.random().toString(36).substring(2, 9), // 고유 ID
+        tag: "",
+        id: Date.now().toString() + Math.random().toString(36).substring(2, 9),
       }));
       setImages((prevImages) => [...prevImages, ...newImages]);
     }
@@ -131,7 +130,8 @@ export default function MemoDetailScreen() {
       title: title.trim(),
       content: content.trim(),
       category: category.trim(),
-      images: images, // 이미지 데이터 포함
+      images: images,
+      timestamp: Date.now(),
     };
 
     try {
@@ -141,16 +141,17 @@ export default function MemoDetailScreen() {
         m.id === updatedMemo.id ? updatedMemo : m
       );
       await AsyncStorage.setItem("memos", JSON.stringify(updatedMemos));
-      ToastAndroid.show("메모가 저장되었습니다.", ToastAndroid.SHORT); // 저장 알림
-      setIsEditing(false);
-      setMemo(updatedMemo); // Update local state
-      if (navigateBack) {
-        router.back();
-      }
+      ToastAndroid.show("메모가 저장되었습니다.", ToastAndroid.SHORT);
+
+      setMemo(updatedMemo);
+      setTitle(updatedMemo.title);
+      setContent(updatedMemo.content);
+      setCategory(updatedMemo.category);
     } catch (error) {
       console.error("Failed to update memo:", error);
       Alert.alert("오류", "메모 수정에 실패했습니다.");
     }
+    setIsEditing(false);
   };
 
   const handleCancelEdit = () => {
@@ -158,7 +159,7 @@ export default function MemoDetailScreen() {
       setTitle(memo.title);
       setContent(memo.content);
       setCategory(memo.category);
-      setImages(memo.images || []); // 이미지도 원래대로 복원
+      setImages(memo.images || []);
     }
     setIsEditing(false);
   };
@@ -181,7 +182,7 @@ export default function MemoDetailScreen() {
                 JSON.stringify(remainingMemos)
               );
               Alert.alert("성공", "메모가 삭제되었습니다.");
-              router.back(); // Navigate back to list after deletion
+              router.back();
             } catch (error) {
               console.error("Failed to delete memo:", error);
               Alert.alert("오류", "메모 삭제에 실패했습니다.");
@@ -196,10 +197,10 @@ export default function MemoDetailScreen() {
   useEffect(() => {
     const backAction = () => {
       if (isEditing) {
-        updateMemo(true); // 저장 후 뒤로가기
-        return true; // 기본 뒤로가기 동작 방지
+        updateMemo(true);
+        return true;
       }
-      return false; // 기본 동작 (앱 종료) 허용
+      return false;
     };
 
     const backHandler = BackHandler.addEventListener(
@@ -208,7 +209,7 @@ export default function MemoDetailScreen() {
     );
 
     return () => backHandler.remove();
-  }, [isEditing, title, content, category, images]); // images도 의존성에 추가
+  }, [isEditing, title, content, category, images]);
 
   if (!memo) {
     return (
@@ -228,7 +229,7 @@ export default function MemoDetailScreen() {
           <>
             <TouchableOpacity
               style={styles.actionButton}
-              onPress={() => updateMemo(false)}
+              onPress={() => updateMemo(true)}
             >
               <Text style={styles.actionButtonText}>저장</Text>
             </TouchableOpacity>
@@ -258,9 +259,9 @@ export default function MemoDetailScreen() {
       >
         <RNScrollView contentContainerStyle={styles.scrollContentContainer}>
           <TouchableOpacity
-            onLongPress={() => setIsEditing(true)} // 길게 눌러 수정 모드 진입
+            onLongPress={() => setIsEditing(true)}
             delayLongPress={1200}
-            activeOpacity={1} // 텍스트 입력 시 투명도 변화 방지
+            activeOpacity={1}
             style={styles.inputWrapper}
           >
             <TextInput
@@ -271,7 +272,7 @@ export default function MemoDetailScreen() {
             />
           </TouchableOpacity>
           <TouchableOpacity
-            onLongPress={() => setIsEditing(true)} // 길게 눌러 수정 모드 진입
+            onLongPress={() => setIsEditing(true)}
             delayLongPress={1200}
             activeOpacity={1}
             style={styles.inputWrapper}
@@ -324,7 +325,7 @@ export default function MemoDetailScreen() {
           />
 
           <TouchableOpacity
-            onLongPress={() => setIsEditing(true)} // 길게 눌러 수정 모드 진입
+            onLongPress={() => setIsEditing(true)}
             delayLongPress={1200}
             activeOpacity={1}
             style={styles.inputWrapper}
@@ -367,7 +368,7 @@ export default function MemoDetailScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f0f0f0",
+    backgroundColor: "#FFF5ED",
     padding: 20,
     paddingTop: 40,
   },
@@ -384,19 +385,17 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   actionButton: {
-    backgroundColor: "#007AFF",
+    backgroundColor: "transparent",
     paddingVertical: 8,
     paddingHorizontal: 15,
     borderRadius: 10,
     marginLeft: 10,
-    elevation: 2,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
+    borderWidth: 1,
+    borderColor: "#815854",
+    borderStyle: "solid",
   },
   actionButtonText: {
-    color: "#fff",
+    color: "#815854",
     fontSize: 16,
     fontWeight: "bold",
   },
@@ -447,11 +446,11 @@ const styles = StyleSheet.create({
     marginBottom: 5,
   },
   addImageButton: {
-    backgroundColor: "#007AFF",
+    backgroundColor: "#815854",
     padding: 10,
     borderRadius: 10,
     alignItems: "center",
-    marginBottom: 5,
+    marginBottom: 15,
   },
   addImageButtonText: {
     color: "#fff",
