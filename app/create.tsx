@@ -1,3 +1,4 @@
+import { FontAwesome } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as ImagePicker from "expo-image-picker";
 import { useRouter } from "expo-router";
@@ -17,6 +18,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { ScrollView } from "react-native-gesture-handler";
 
 interface ImageAsset {
   uri: string;
@@ -45,6 +47,32 @@ export default function CreateMemoScreen() {
         id: Date.now().toString() + Math.random().toString(36).substring(2, 9),
       }));
       setImages((prevImages) => [...prevImages, ...newImages]);
+    }
+  };
+
+  const takePhoto = async () => {
+    const { status } = await ImagePicker.requestCameraPermissionsAsync();
+    if (status !== "granted") {
+      Alert.alert(
+        "권한 필요",
+        "사진을 촬영하려면 카메라 접근 권한이 필요합니다."
+      );
+      return;
+    }
+
+    let result = await ImagePicker.launchCameraAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: false, // No editing for instant capture
+      quality: 1,
+    });
+
+    if (!result.canceled) {
+      const newImage = {
+        uri: result.assets[0].uri,
+        tag: "", // Default empty tag for new photos
+        id: Date.now().toString() + Math.random().toString(36).substring(2, 9),
+      };
+      setImages((prevImages) => [...prevImages, newImage]);
     }
   };
 
@@ -163,51 +191,61 @@ export default function CreateMemoScreen() {
         style={styles.keyboardAvoidingView}
         behavior={Platform.OS === "ios" ? "padding" : "height"}
       >
-        <TextInput
-          style={styles.titleInput}
-          placeholder="제목"
-          value={title}
-          onChangeText={setTitle}
-        />
-        <TextInput
-          style={styles.categoryInput}
-          placeholder="카테고리 (선택 사항)"
-          value={category}
-          onChangeText={setCategory}
-        />
-        <TouchableOpacity style={styles.addImageButton} onPress={pickImage}>
-          <Text style={styles.addImageButtonText}>이미지 추가</Text>
-        </TouchableOpacity>
-        <FlatList
-          data={images}
-          renderItem={renderImageItem}
-          keyExtractor={(item) => item.id}
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          style={styles.imagePreviewList}
-        />
-        <TextInput
-          style={styles.contentInput}
-          placeholder="내용"
-          value={content}
-          onChangeText={setContent}
-          multiline
-          textAlignVertical="top"
-        />
-        <View style={styles.buttonContainer}>
-          <TouchableOpacity
-            style={styles.saveButton}
-            onPress={() => saveMemo()}
-          >
-            <Text style={styles.buttonText}>저장</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.cancelButton}
-            onPress={() => router.back()}
-          >
-            <Text style={styles.buttonText}>취소</Text>
-          </TouchableOpacity>
-        </View>
+        <ScrollView showsHorizontalScrollIndicator={false}>
+          <TextInput
+            style={styles.titleInput}
+            placeholder="제목"
+            value={title}
+            onChangeText={setTitle}
+          />
+          <TextInput
+            style={styles.categoryInput}
+            placeholder="카테고리 (선택 사항)"
+            value={category}
+            onChangeText={setCategory}
+          />
+          <View style={styles.imageButtonContainer}>
+            <TouchableOpacity style={styles.addImageButton} onPress={pickImage}>
+              <Text style={styles.addImageButtonText}>이미지 추가</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.takePhotoButton}
+              onPress={takePhoto}
+            >
+              <FontAwesome name="camera" size={24} color="#fff" />
+            </TouchableOpacity>
+          </View>
+          <FlatList
+            data={images}
+            renderItem={renderImageItem}
+            keyExtractor={(item) => item.id}
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            style={styles.imagePreviewList}
+          />
+          <TextInput
+            style={styles.contentInput}
+            placeholder="내용"
+            value={content}
+            onChangeText={setContent}
+            multiline
+            textAlignVertical="top"
+          />
+          <View style={styles.buttonContainer}>
+            <TouchableOpacity
+              style={styles.saveButton}
+              onPress={() => saveMemo()}
+            >
+              <Text style={styles.buttonText}>저장</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.cancelButton}
+              onPress={() => router.back()}
+            >
+              <Text style={styles.buttonText}>취소</Text>
+            </TouchableOpacity>
+          </View>
+        </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
@@ -218,7 +256,8 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#F9EBDE",
     padding: 20,
-    paddingTop: 40,
+    paddingTop: 70,
+    paddingBottom: 70,
   },
   keyboardAvoidingView: {
     flex: 1,
@@ -257,7 +296,20 @@ const styles = StyleSheet.create({
     padding: 10,
     borderRadius: 10,
     alignItems: "center",
-    marginBottom: 5,
+    flex: 4, // Add this
+  },
+  imageButtonContainer: {
+    flexDirection: "row",
+    justifyContent: "space-around",
+    marginBottom: 15, // Moved from addImageButton
+  },
+  takePhotoButton: {
+    backgroundColor: "#815854",
+    padding: 10,
+    borderRadius: 10,
+    alignItems: "center",
+    flex: 1,
+    marginLeft: 10,
   },
   addImageButtonText: {
     color: "#fff",
@@ -265,12 +317,14 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
   },
   imagePreviewList: {
+    marginTop: 15,
     marginBottom: 15,
   },
   imageItemContainer: {
     flexDirection: "row",
     alignItems: "center",
     marginRight: 10,
+
     backgroundColor: "#FFF5ED", // Changed
     borderRadius: 10,
     padding: 5,
@@ -313,7 +367,7 @@ const styles = StyleSheet.create({
     padding: 15,
     borderRadius: 10,
     fontSize: 16,
-    height: 650,
+    height: 450,
     marginBottom: 5,
     borderWidth: 1,
     borderColor: "#815854",

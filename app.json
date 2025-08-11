@@ -16,7 +16,8 @@
         "foregroundImage": "./assets/images/MyMemoIcon.png",
         "backgroundColor": "#ffffff"
       },
-      "edgeToEdgeEnabled": true
+      "edgeToEdgeEnabled": true,
+      "package": "com.sinjoongwon.MyMemoApp"
     },
     "web": {
       "bundler": "metro",
@@ -37,6 +38,12 @@
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "b5b59dbe-f88b-4cca-9dbb-3c564889bf56"
+      }
     }
   }
 }

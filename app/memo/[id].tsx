@@ -1,3 +1,4 @@
+import { FontAwesome } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as ImagePicker from "expo-image-picker";
 import { useLocalSearchParams, useRouter } from "expo-router";
@@ -19,6 +20,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import ImageViewer from "react-native-image-zoom-viewer";
 
 interface ImageAsset {
   uri: string;
@@ -44,7 +46,9 @@ export default function MemoDetailScreen() {
   const [category, setCategory] = useState("");
   const [images, setImages] = useState<ImageAsset[]>([]); // 이미지 상태 추가
   const [isEditing, setIsEditing] = useState(false);
-  const [fullImageUri, setFullImageUri] = useState<string | null>(null);
+  const [selectedImage, setSelectedImage] = useState<ImageAsset | null>(null);
+  const [isImageTagVisible, setIsImageTagVisible] = useState(true);
+  const [currentImageViewerIndex, setCurrentImageViewerIndex] = useState(0);
 
   useEffect(() => {
     if (id) {
@@ -85,6 +89,32 @@ export default function MemoDetailScreen() {
         id: Date.now().toString() + Math.random().toString(36).substring(2, 9),
       }));
       setImages((prevImages) => [...prevImages, ...newImages]);
+    }
+  };
+
+  const takePhoto = async () => {
+    const { status } = await ImagePicker.requestCameraPermissionsAsync();
+    if (status !== "granted") {
+      Alert.alert(
+        "권한 필요",
+        "사진을 촬영하려면 카메라 접근 권한이 필요합니다."
+      );
+      return;
+    }
+
+    let result = await ImagePicker.launchCameraAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: false, // No editing for instant capture
+      quality: 1,
+    });
+
+    if (!result.canceled) {
+      const newImage = {
+        uri: result.assets[0].uri,
+        tag: "", // Default empty tag for new photos
+        id: Date.now().toString() + Math.random().toString(36).substring(2, 9),
+      };
+      setImages((prevImages) => [...prevImages, newImage]);
     }
   };
 
@@ -257,7 +287,10 @@ export default function MemoDetailScreen() {
         style={styles.keyboardAvoidingView}
         behavior={Platform.OS === "ios" ? "padding" : "height"}
       >
-        <RNScrollView contentContainerStyle={styles.scrollContentContainer}>
+        <RNScrollView
+          contentContainerStyle={styles.scrollContentContainer}
+          showsHorizontalScrollIndicator={false}
+        >
           <TouchableOpacity
             onLongPress={() => setIsEditing(true)}
             delayLongPress={1200}
@@ -286,19 +319,32 @@ export default function MemoDetailScreen() {
           </TouchableOpacity>
 
           {isEditing && (
-            <TouchableOpacity style={styles.addImageButton} onPress={pickImage}>
-              <Text style={styles.addImageButtonText}>이미지 추가</Text>
-            </TouchableOpacity>
+            <View style={styles.imageButtonContainer}>
+              <TouchableOpacity
+                style={styles.addImageButton}
+                onPress={pickImage}
+              >
+                <Text style={styles.addImageButtonText}>이미지 추가</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.takePhotoButton}
+                onPress={takePhoto}
+              >
+                <FontAwesome name="camera" size={24} color="#fff" />
+              </TouchableOpacity>
+            </View>
           )}
           <FlatList
             data={images}
             renderItem={({ item }) => (
               <View style={styles.imageItemContainer}>
-                <TouchableOpacity onPress={() => setFullImageUri(item.uri)}>
-                  <Image
-                    source={{ uri: item.uri }}
-                    style={styles.thumbnailImage}
-                  />
+                <TouchableOpacity onPress={() => setSelectedImage(item)}>
+                  <View style={styles.circularImageWrapper}>
+                    <Image
+                      source={{ uri: item.uri }}
+                      style={styles.thumbnailImage}
+                    />
+                  </View>
                 </TouchableOpacity>
                 {isEditing && (
                   <TextInput
@@ -343,23 +389,37 @@ export default function MemoDetailScreen() {
       </KeyboardAvoidingView>
 
       <Modal
-        visible={!!fullImageUri}
+        visible={!!selectedImage}
         transparent={true}
-        onRequestClose={() => setFullImageUri(null)}
+        onRequestClose={() => setSelectedImage(null)}
       >
-        <View style={styles.fullImageModalContainer}>
-          <Image
-            source={{ uri: fullImageUri || "" }}
-            style={styles.fullImage}
-            resizeMode="contain"
-          />
-          <TouchableOpacity
-            style={styles.closeFullImageButton}
-            onPress={() => setFullImageUri(null)}
-          >
-            <Text style={styles.closeFullImageButtonText}>닫기</Text>
-          </TouchableOpacity>
-        </View>
+        {selectedImage && (
+          <View style={styles.imageViewerModalContainer}> {/* New container for ImageViewer and footer */} 
+            <ImageViewer
+              imageUrls={images.map(img => ({ url: img.uri, props: { tag: img.tag } }))}
+              enableSwipeDown={true}
+              onSwipeDown={() => setSelectedImage(null)}
+              index={selectedImage ? images.findIndex(img => img.id === selectedImage.id) : 0}
+              onChange={(index) => setCurrentImageViewerIndex(index || 0)} // Track current image index
+              style={{ flex: 1 }} // Ensure ImageViewer fills the container
+            />
+            <View style={styles.imageModalFooter}> {/* Moved footer outside ImageViewer */} 
+              <View style={styles.imageTagContainer}>
+                {isImageTagVisible && (
+                  <Text style={styles.imageModalTag}>{images[currentImageViewerIndex]?.tag || ''}</Text>
+                )}
+                <TouchableOpacity
+                  onPress={() => setIsImageTagVisible(!isImageTagVisible)}
+                  style={styles.toggleTagButton}
+                >
+                  <Text style={styles.toggleTagButtonText}>
+                    {isImageTagVisible ? '▼' : '▲'}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        )}
       </Modal>
     </SafeAreaView>
   );
@@ -369,8 +429,11 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#FFF5ED",
-    padding: 20,
+    paddingHorizontal: 15,
+    paddingLeft: 10,
+    paddingRight: 10,
     paddingTop: 40,
+    paddingBottom: 20, // Keep consistent with original vertical padding
   },
   header: {
     fontSize: 24,
@@ -450,7 +513,20 @@ const styles = StyleSheet.create({
     padding: 10,
     borderRadius: 10,
     alignItems: "center",
-    marginBottom: 15,
+    flex: 4, // Add this
+  },
+  imageButtonContainer: {
+    flexDirection: "row",
+    justifyContent: "space-around",
+    marginBottom: 15, // Moved from addImageButton
+  },
+  takePhotoButton: {
+    backgroundColor: "#815854",
+    padding: 10,
+    borderRadius: 10,
+    alignItems: "center",
+    flex: 1,
+    marginLeft: 10,
   },
   addImageButtonText: {
     color: "#fff",
@@ -458,26 +534,35 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
   },
   imagePreviewList: {
-    marginBottom: 15,
+    marginBottom: 5,
   },
   imageItemContainer: {
     flexDirection: "row",
     alignItems: "center",
+  },
+
+  thumbnailImage: {
+    width: "100%", // Fill the wrapper
+    height: "100%", // Fill the wrapper
+    borderRadius: 50, // Keep image circular
+  },
+  circularImageWrapper: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    borderWidth: 2,
+    borderColor: "#815854", // Site's color
+    borderStyle: "dashed",
+    justifyContent: "center",
+    alignItems: "center",
+    overflow: "hidden",
     marginRight: 10,
-    backgroundColor: "#fff",
-    borderRadius: 10,
-    padding: 5,
+    marginBottom: 10,
     elevation: 2,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.1,
     shadowRadius: 2,
-  },
-  thumbnailImage: {
-    width: 80,
-    height: 80,
-    borderRadius: 5,
-    marginRight: 10,
   },
   imageTagInput: {
     flex: 1,
@@ -500,26 +585,41 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "bold",
   },
-  fullImageModalContainer: {
-    flex: 1,
-    backgroundColor: "rgba(0,0,0,0.9)",
-    justifyContent: "center",
+  imageModalFooter: {
+    position: "absolute",
+    bottom: 0,
+    width: "80%", // Set a specific width, e.g., 80% of the parent
+    alignSelf: "center", // Center horizontally within the parent
+    backgroundColor: "rgba(0, 0, 0, 0.7)",
+    padding: 20,
     alignItems: "center",
   },
-  fullImage: {
-    width: "90%",
-    height: "80%",
-  },
-  closeFullImageButton: {
-    position: "absolute",
-    top: 50,
-    right: 20,
-    backgroundColor: "#fff",
-    padding: 10,
-    borderRadius: 20,
-  },
-  closeFullImageButtonText: {
-    color: "#000",
+  imageModalTag: {
+    color: "#fff",
+    fontSize: 20,
     fontWeight: "bold",
+    textAlign: "center",
+  },
+  imageTagContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center', // Center content within this container
+    flexWrap: 'wrap', // Allow text to wrap if it's too long
+  },
+  toggleTagButton: {
+    marginLeft: 10, // Space between text and button
+    padding: 5,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)', // Slightly visible background
+    borderRadius: 5,
+  },
+  toggleTagButtonText: {
+    color: '#fff',
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  imageViewerModalContainer: {
+    flex: 1,
+    position: 'relative', // For absolute positioning of the footer
+    backgroundColor: 'black', // Background for the viewer
   },
 });

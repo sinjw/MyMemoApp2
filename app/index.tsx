@@ -273,7 +273,7 @@ export default function MemoListScreen() {
           <View style={styles.emptyContainer}>
             <Text style={styles.emptyText}>아직 메모가 없습니다.</Text>
             <Text style={styles.emptyText}>
-              오른쪽 하단의 + 버튼을 눌러 메모를 추가해보세요!
+              하단의 버튼을 눌러 메모를 추가해보세요!
             </Text>
           </View>
         }
@@ -344,8 +344,8 @@ export default function MemoListScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#FFEDDD",
-    paddingTop: 0,
+    backgroundColor: "#FFF5ED",
+    paddingTop: 70,
   },
   fixedHeaderContainer: {
     backgroundColor: "#FFF5ED",
@@ -502,7 +502,7 @@ const styles = StyleSheet.create({
   },
   addButton: {
     position: "absolute",
-    bottom: 30,
+    bottom: 130,
     right: 30,
     backgroundColor: "#F5F5DC", // Beige color
     width: 60,
