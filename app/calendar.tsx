@@ -6,6 +6,7 @@ import {
   FlatList,
   Modal,
   SafeAreaView,
+  ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -381,11 +382,10 @@ export default function CalendarScreen() {
                 : "메모"}
             </Text>
             {selectedDateMemos.length > 0 ? (
-              <FlatList
-                data={selectedDateMemos}
-                keyExtractor={(item) => item.id}
-                renderItem={({ item }) => (
+              <ScrollView style={styles.modalFlatList}>
+                {selectedDateMemos.map((item) => (
                   <TouchableOpacity
+                    key={item.id}
                     style={styles.modalMemoItem}
                     onPress={() => {
                       setShowMemosModal(false);
@@ -408,9 +408,8 @@ export default function CalendarScreen() {
                       {item.content}
                     </Text>
                   </TouchableOpacity>
-                )}
-                style={styles.modalFlatList} // Add a style for FlatList
-              />
+                ))}
+              </ScrollView>
             ) : (
               <Text style={styles.noMemosText}>
                 해당 날짜에 메모가 없습니다.
@@ -462,12 +461,10 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "bold",
     color: "#815854",
-    width: "14%", // Approx 1/7th of the width
     textAlign: "center",
   },
   dayOfWeekCell: {
-    // New style
-    width: "14%",
+    flex: 1,
     justifyContent: "center",
     alignItems: "center",
   },

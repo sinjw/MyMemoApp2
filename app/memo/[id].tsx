@@ -1,3 +1,4 @@
+import { CollapsibleText } from "@/components/CollapsibleText";
 import { FontAwesome } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as ImagePicker from "expo-image-picker";
@@ -47,7 +48,7 @@ export default function MemoDetailScreen() {
   const [images, setImages] = useState<ImageAsset[]>([]); // 이미지 상태 추가
   const [isEditing, setIsEditing] = useState(false);
   const [selectedImage, setSelectedImage] = useState<ImageAsset | null>(null);
-  const [isImageTagVisible, setIsImageTagVisible] = useState(true);
+
   const [currentImageViewerIndex, setCurrentImageViewerIndex] = useState(0);
 
   useEffect(() => {
@@ -394,29 +395,28 @@ export default function MemoDetailScreen() {
         onRequestClose={() => setSelectedImage(null)}
       >
         {selectedImage && (
-          <View style={styles.imageViewerModalContainer}> {/* New container for ImageViewer and footer */} 
+          <View style={styles.imageViewerModalContainer}>
+            {" "}
+            {/* New container for ImageViewer and footer */}
             <ImageViewer
-              imageUrls={images.map(img => ({ url: img.uri, props: { tag: img.tag } }))}
+              imageUrls={images.map((img) => ({
+                url: img.uri,
+                props: { tag: img.tag },
+              }))}
               enableSwipeDown={true}
               onSwipeDown={() => setSelectedImage(null)}
-              index={selectedImage ? images.findIndex(img => img.id === selectedImage.id) : 0}
+              index={
+                selectedImage
+                  ? images.findIndex((img) => img.id === selectedImage.id)
+                  : 0
+              }
               onChange={(index) => setCurrentImageViewerIndex(index || 0)} // Track current image index
               style={{ flex: 1 }} // Ensure ImageViewer fills the container
             />
-            <View style={styles.imageModalFooter}> {/* Moved footer outside ImageViewer */} 
-              <View style={styles.imageTagContainer}>
-                {isImageTagVisible && (
-                  <Text style={styles.imageModalTag}>{images[currentImageViewerIndex]?.tag || ''}</Text>
-                )}
-                <TouchableOpacity
-                  onPress={() => setIsImageTagVisible(!isImageTagVisible)}
-                  style={styles.toggleTagButton}
-                >
-                  <Text style={styles.toggleTagButtonText}>
-                    {isImageTagVisible ? '▼' : '▲'}
-                  </Text>
-                </TouchableOpacity>
-              </View>
+            <View style={styles.imageModalFooter}>
+              <CollapsibleText title="▲">
+                {images[currentImageViewerIndex]?.tag || ""}
+              </CollapsibleText>
             </View>
           </View>
         )}
@@ -588,38 +588,40 @@ const styles = StyleSheet.create({
   imageModalFooter: {
     position: "absolute",
     bottom: 0,
-    width: "80%", // Set a specific width, e.g., 80% of the parent
-    alignSelf: "center", // Center horizontally within the parent
+    left: 0,
+    right: 0,
+    width: "100%",
     backgroundColor: "rgba(0, 0, 0, 0.7)",
-    padding: 20,
+    paddingVertical: 20,
+    paddingHorizontal: 0,
+    flexDirection: "row",
+    justifyContent: "center",
     alignItems: "center",
   },
   imageModalTag: {
     color: "#fff",
-    fontSize: 20,
-    fontWeight: "bold",
     textAlign: "center",
-  },
-  imageTagContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center', // Center content within this container
-    flexWrap: 'wrap', // Allow text to wrap if it's too long
+    flex: 1,
   },
   toggleTagButton: {
-    marginLeft: 10, // Space between text and button
-    padding: 5,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)', // Slightly visible background
-    borderRadius: 5,
+    paddingHorizontal: 15,
   },
   toggleTagButtonText: {
-    color: '#fff',
+    color: "#fff",
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: "bold",
+  },
+  showTagButton: {
+    position: "absolute",
+    bottom: 20,
+    alignSelf: "center",
+    backgroundColor: "rgba(0,0,0,0.5)",
+    padding: 10,
+    borderRadius: 20,
   },
   imageViewerModalContainer: {
     flex: 1,
-    position: 'relative', // For absolute positioning of the footer
-    backgroundColor: 'black', // Background for the viewer
+    position: "relative", // For absolute positioning of the footer
+    backgroundColor: "black", // Background for the viewer
   },
 });
