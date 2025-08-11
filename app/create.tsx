@@ -191,7 +191,7 @@ export default function CreateMemoScreen() {
         style={styles.keyboardAvoidingView}
         behavior={Platform.OS === "ios" ? "padding" : "height"}
       >
-        <ScrollView showsHorizontalScrollIndicator={false}>
+        <ScrollView showsHorizontalScrollIndicator={false} showsVerticalScrollIndicator={false}>
           <TextInput
             style={styles.titleInput}
             placeholder="제목"
