@@ -62,14 +62,14 @@ export default function CreateMemoScreen() {
 
     let result = await ImagePicker.launchCameraAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: false, // No editing for instant capture
+      allowsEditing: false,
       quality: 1,
     });
 
     if (!result.canceled) {
       const newImage = {
         uri: result.assets[0].uri,
-        tag: "", // Default empty tag for new photos
+        tag: "",
         id: Date.now().toString() + Math.random().toString(36).substring(2, 9),
       };
       setImages((prevImages) => [...prevImages, newImage]);
@@ -191,7 +191,10 @@ export default function CreateMemoScreen() {
         style={styles.keyboardAvoidingView}
         behavior={Platform.OS === "ios" ? "padding" : "height"}
       >
-        <ScrollView showsHorizontalScrollIndicator={false} showsVerticalScrollIndicator={false}>
+        <ScrollView
+          showsHorizontalScrollIndicator={false}
+          showsVerticalScrollIndicator={false}
+        >
           <TextInput
             style={styles.titleInput}
             placeholder="제목"
@@ -262,7 +265,7 @@ const styles = StyleSheet.create({
   keyboardAvoidingView: {
     flex: 1,
     justifyContent: "center",
-    marginHorizontal: 5, // Added
+    marginHorizontal: 5,
   },
   header: {
     fontSize: 24,
@@ -296,12 +299,12 @@ const styles = StyleSheet.create({
     padding: 10,
     borderRadius: 10,
     alignItems: "center",
-    flex: 4, // Add this
+    flex: 4,
   },
   imageButtonContainer: {
     flexDirection: "row",
     justifyContent: "space-around",
-    marginBottom: 15, // Moved from addImageButton
+    marginBottom: 15,
   },
   takePhotoButton: {
     backgroundColor: "#815854",
@@ -325,7 +328,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginRight: 10,
 
-    backgroundColor: "#FFF5ED", // Changed
+    backgroundColor: "#FFF5ED",
     borderRadius: 10,
     padding: 5,
     elevation: 2,
@@ -399,6 +402,6 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     marginTop: 20,
     marginBottom: 70,
-    marginHorizontal: 5, // Added
+    marginHorizontal: 5,
   },
 });

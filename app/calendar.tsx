@@ -1,9 +1,8 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useFocusEffect } from "@react-navigation/native";
 import { useRouter } from "expo-router";
-import React, { useCallback, useMemo, useState } from "react"; // Import useMemo
+import React, { useCallback, useMemo, useState } from "react";
 import {
-  FlatList,
   Modal,
   SafeAreaView,
   ScrollView,
@@ -12,6 +11,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+
 interface Memo {
   id: string;
   title: string;
@@ -24,12 +24,11 @@ interface Memo {
 export default function CalendarScreen() {
   const [currentDate, setCurrentDate] = useState(new Date());
   const router = useRouter();
-  const [redTextDays, setRedTextDays] = useState([5, 6]); // 5 for Friday, 6 for Saturday
-
-  const [allMemos, setAllMemos] = useState<Memo[]>([]); // New state to store all memos
-  const [showMemosModal, setShowMemosModal] = useState(false); // New state for memo list modal visibility
-  const [selectedDateMemos, setSelectedDateMemos] = useState<Memo[]>([]); // Memos for the selected date
-  const [selectedDate, setSelectedDate] = useState<Date | null>(null); // The date that was long-pressed
+  const [redTextDays, setRedTextDays] = useState([5, 6]);
+  const [allMemos, setAllMemos] = useState<Memo[]>([]);
+  const [showMemosModal, setShowMemosModal] = useState(false);
+  const [selectedDateMemos, setSelectedDateMemos] = useState<Memo[]>([]);
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
 
   const loadAllMemos = async () => {
     try {
@@ -64,13 +63,11 @@ export default function CalendarScreen() {
     return counts;
   }, [allMemos]);
 
-  const getDaysInMonth = (year: number, month: number) => {
-    return new Date(year, month + 1, 0).getDate();
-  };
+  const getDaysInMonth = (year: number, month: number) =>
+    new Date(year, month + 1, 0).getDate();
 
-  const getFirstDayOfMonth = (year: number, month: number) => {
-    return new Date(year, month, 1).getDay(); // 0 for Sunday, 1 for Monday, etc.
-  };
+  const getFirstDayOfMonth = (year: number, month: number) =>
+    new Date(year, month, 1).getDay();
 
   const renderHeader = () => {
     const monthNames = [
@@ -91,25 +88,17 @@ export default function CalendarScreen() {
     const year = currentDate.getFullYear();
 
     const goToPreviousMonth = () => {
-      setCurrentDate((prevDate) => {
-        const newDate = new Date(
-          prevDate.getFullYear(),
-          prevDate.getMonth() - 1,
-          1
-        );
-        return newDate;
-      });
+      setCurrentDate(
+        (prevDate) =>
+          new Date(prevDate.getFullYear(), prevDate.getMonth() - 1, 1)
+      );
     };
 
     const goToNextMonth = () => {
-      setCurrentDate((prevDate) => {
-        const newDate = new Date(
-          prevDate.getFullYear(),
-          prevDate.getMonth() + 1,
-          1
-        );
-        return newDate;
-      });
+      setCurrentDate(
+        (prevDate) =>
+          new Date(prevDate.getFullYear(), prevDate.getMonth() + 1, 1)
+      );
     };
 
     return (
@@ -117,8 +106,7 @@ export default function CalendarScreen() {
         <TouchableOpacity onPress={goToPreviousMonth}>
           <Text style={styles.navButton}>{"<"}</Text>
         </TouchableOpacity>
-        <Text style={styles.headerText}>{`${year}년 ${month}`}</Text>{" "}
-        {/* Changed format */}
+        <Text style={styles.headerText}>{`${year}년 ${month}`}</Text>
         <TouchableOpacity onPress={goToNextMonth}>
           <Text style={styles.navButton}>{">"}</Text>
         </TouchableOpacity>
@@ -130,13 +118,11 @@ export default function CalendarScreen() {
     const days = ["일", "월", "화", "수", "목", "금", "토"];
 
     const toggleRedDay = (dayIndex: number) => {
-      setRedTextDays((prevRedTextDays) => {
-        if (prevRedTextDays.includes(dayIndex)) {
-          return prevRedTextDays.filter((d) => d !== dayIndex);
-        } else {
-          return [...prevRedTextDays, dayIndex];
-        }
-      });
+      setRedTextDays((prev) =>
+        prev.includes(dayIndex)
+          ? prev.filter((d) => d !== dayIndex)
+          : [...prev, dayIndex]
+      );
     };
 
     return (
@@ -147,7 +133,6 @@ export default function CalendarScreen() {
             onLongPress={() => toggleRedDay(index)}
             style={styles.dayOfWeekCell}
           >
-            {/* Added TouchableOpacity and style */}
             <Text
               style={[
                 styles.dayOfWeekText,
@@ -167,30 +152,34 @@ export default function CalendarScreen() {
     const month = currentDate.getMonth();
     const daysInMonth = getDaysInMonth(year, month);
     const firstDayOfMonth = getFirstDayOfMonth(year, month);
-
     const allDays = [];
 
-    // Calculate previous month's days
-    const prevMonthLastDay = new Date(year, month, 0).getDate(); // Last day of previous month
+    const prevMonthLastDay = new Date(year, month, 0).getDate();
 
-    // Fill leading empty days with previous month's dates
     for (let i = 0; i < firstDayOfMonth; i++) {
       const day = prevMonthLastDay - firstDayOfMonth + 1 + i;
-      const dayOfWeek = i % 7; // Day of week for this cell
 
       const handleDayLongPress = () => {
-        const fullDate = new Date(year, month - 1, day); // Previous month
-        const targetDateString = `${fullDate.getFullYear()}-${(fullDate.getMonth() + 1)
+        const fullDate = new Date(year, month - 1, day);
+        const targetDateString = `${fullDate.getFullYear()}-${(
+          fullDate.getMonth() + 1
+        )
           .toString()
           .padStart(2, "0")}-${fullDate.getDate().toString().padStart(2, "0")}`;
 
         const memosForThisDate = allMemos.filter((memo) => {
           const memoDate = new Date(memo.timestamp);
-          const memoDateString = `${memoDate.getFullYear()}-${(memoDate.getMonth() + 1)
+          const memoDateString = `${memoDate.getFullYear()}-${(
+            memoDate.getMonth() + 1
+          )
             .toString()
-            .padStart(2, "0")}-${memoDate.getDate().toString().padStart(2, "0")}`;
+            .padStart(2, "0")}-${memoDate
+            .getDate()
+            .toString()
+            .padStart(2, "0")}`;
           return memoDateString === targetDateString;
         });
+
         console.log("Long-pressed date (prev month):", fullDate.toDateString());
         console.log(
           "Memos for this date (prev month):",
@@ -208,40 +197,37 @@ export default function CalendarScreen() {
           style={styles.dayCell}
           onLongPress={handleDayLongPress}
         >
-          {/* Added onLongPress */}
-          <Text
-            style={[
-              styles.dayText,
-              { color: "#ccc" }, // Faded color for previous month's days
-            ]}
-          >
-            {day}
-          </Text>
+          <Text style={[styles.dayText, { color: "#ccc" }]}>{day}</Text>
         </TouchableOpacity>
       );
     }
 
-    // Fill days of the month
     for (let i = 1; i <= daysInMonth; i++) {
-      const dayOfWeek = (firstDayOfMonth + i - 1) % 7; // Calculate day of week for current day number
+      const dayOfWeek = (firstDayOfMonth + i - 1) % 7;
       const dateString = `${year}-${(month + 1).toString().padStart(2, "0")}-${i
         .toString()
         .padStart(2, "0")}`;
-      const memoCount = memoCountsByDate[dateString] || 0; // Get memo count
+      const memoCount = memoCountsByDate[dateString] || 0;
 
       const handleDayLongPress = () => {
         const fullDate = new Date(year, month, i);
-        const targetDateString = `${fullDate.getFullYear()}-${(fullDate.getMonth() + 1)
+        const targetDateString = `${fullDate.getFullYear()}-${(
+          fullDate.getMonth() + 1
+        )
           .toString()
           .padStart(2, "0")}-${fullDate.getDate().toString().padStart(2, "0")}`;
 
-        const memosForThisDate = allMemos.filter((memo) => {
-          const memoDate = new Date(memo.timestamp);
-          const memoDateString = `${memoDate.getFullYear()}-${(memoDate.getMonth() + 1)
-            .toString()
-            .padStart(2, "0")}-${memoDate.getDate().toString().padStart(2, "0")}`;
+        const memosForThisDate = allMemos.filter(({ timestamp }) => {
+          const d = new Date(timestamp);
+          const memoDateString = [
+            d.getFullYear(),
+            String(d.getMonth() + 1).padStart(2, "0"),
+            String(d.getDate()).padStart(2, "0"),
+          ].join("-");
+
           return memoDateString === targetDateString;
         });
+
         console.log(
           "Long-pressed date (current month):",
           fullDate.toDateString()
@@ -262,8 +248,6 @@ export default function CalendarScreen() {
           style={styles.dayCell}
           onLongPress={handleDayLongPress}
         >
-          {" "}
-          {/* Added onLongPress */}
           <Text
             style={[
               styles.dayText,
@@ -272,71 +256,62 @@ export default function CalendarScreen() {
           >
             {i}
           </Text>
-          {memoCount > 0 && ( // Display memo count if greater than 0
+          {memoCount > 0 && (
             <View style={styles.memoCountContainer}>
               <Text
                 style={styles.memoCountText}
-              >{`${memoCount}개의 메모`}</Text>{" "}
-              {/* Changed text format */}
+              >{`${memoCount}개의 메모`}</Text>
             </View>
           )}
         </TouchableOpacity>
       );
     }
 
-    // Fill trailing empty days with next month's dates
     const totalCells = allDays.length;
-    const remainingCells = 42 - totalCells; // Max 6 rows * 7 days = 42 cells
+    const remainingCells = 42 - totalCells;
 
-    if (remainingCells > 0) {
-      for (let i = 1; i <= remainingCells; i++) {
-        const dayOfWeek = (totalCells + i - 1) % 7;
+    for (let i = 1; i <= remainingCells; i++) {
+      const handleDayLongPress = () => {
+        const fullDate = new Date(year, month + 1, i);
+        const targetDateString = `${fullDate.getFullYear()}-${(
+          fullDate.getMonth() + 1
+        )
+          .toString()
+          .padStart(2, "0")}-${fullDate.getDate().toString().padStart(2, "0")}`;
 
-        const handleDayLongPress = () => {
-          const fullDate = new Date(year, month + 1, i); // Next month
-          const targetDateString = `${fullDate.getFullYear()}-${(fullDate.getMonth() + 1)
+        const memosForThisDate = allMemos.filter((memo) => {
+          const memoDate = new Date(memo.timestamp);
+          const memoDateString = `${memoDate.getFullYear()}-${(
+            memoDate.getMonth() + 1
+          )
             .toString()
-            .padStart(2, "0")}-${fullDate.getDate().toString().padStart(2, "0")}`;
+            .padStart(2, "0")}-${memoDate
+            .getDate()
+            .toString()
+            .padStart(2, "0")}`;
+          return memoDateString === targetDateString;
+        });
 
-          const memosForThisDate = allMemos.filter((memo) => {
-            const memoDate = new Date(memo.timestamp);
-            const memoDateString = `${memoDate.getFullYear()}-${(memoDate.getMonth() + 1)
-              .toString()
-              .padStart(2, "0")}-${memoDate.getDate().toString().padStart(2, "0")}`;
-            return memoDateString === targetDateString;
-          });
-          console.log(
-            "Long-pressed date (next month):",
-            fullDate.toDateString()
-          );
-          console.log(
-            "Memos for this date (next month):",
-            memosForThisDate.length,
-            "memos"
-          );
-          setSelectedDateMemos(memosForThisDate);
-          setSelectedDate(fullDate);
-          setShowMemosModal(true);
-        };
-
-        allDays.push(
-          <TouchableOpacity
-            key={`next-${i}`}
-            style={styles.dayCell}
-            onLongPress={handleDayLongPress}
-          >
-            {/* Added onLongPress */}
-            <Text
-              style={[
-                styles.dayText,
-                { color: "#ccc" }, // Faded color for next month's days
-              ]}
-            >
-              {i}
-            </Text>
-          </TouchableOpacity>
+        console.log("Long-pressed date (next month):", fullDate.toDateString());
+        console.log(
+          "Memos for this date (next month):",
+          memosForThisDate.length,
+          "memos"
         );
-      }
+        setSelectedDateMemos(memosForThisDate);
+        setSelectedDate(fullDate);
+        setShowMemosModal(true);
+      };
+
+      allDays.push(
+        <TouchableOpacity
+          key={`next-${i}`}
+          style={styles.dayCell}
+          onLongPress={handleDayLongPress}
+        >
+          <Text style={[styles.dayText, { color: "#ccc" }]}>{i}</Text>
+        </TouchableOpacity>
+      );
     }
 
     const rows = [];
@@ -344,7 +319,6 @@ export default function CalendarScreen() {
     for (let i = 0; i < allDays.length; i++) {
       cellsInRow.push(allDays[i]);
       if ((i + 1) % 7 === 0) {
-        // End of a week
         rows.push(
           <View key={`row-${i / 7}`} style={styles.calendarRow}>
             {cellsInRow}
@@ -360,7 +334,6 @@ export default function CalendarScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.calendarWrapper}>
-        {/* New wrapper View */}
         {renderHeader()}
         {renderDaysOfWeek()}
         {renderDays()}
@@ -381,40 +354,44 @@ export default function CalendarScreen() {
                   }월 ${selectedDate.getDate()}일 메모`
                 : "메모"}
             </Text>
+
             {selectedDateMemos.length > 0 ? (
-              <ScrollView style={styles.modalFlatList}>
-                {selectedDateMemos.map((item) => (
-                  <TouchableOpacity
-                    key={item.id}
-                    style={styles.modalMemoItem}
-                    onPress={() => {
-                      setShowMemosModal(false);
-                      router.push({
-                        pathname: "/memo/[id]",
-                        params: {
-                          id: item.id,
-                          title: item.title,
-                          content: item.content,
-                          category: item.category,
-                          timestamp: item.timestamp.toString(),
-                        },
-                      });
-                    }}
-                  >
-                    <Text style={styles.modalMemoTitle}>
-                      {item.title || "제목 없음"}
-                    </Text>
-                    <Text style={styles.modalMemoContent} numberOfLines={1}>
-                      {item.content}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-              </ScrollView>
+              <View style={styles.listContainer}>
+                <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
+                  {selectedDateMemos.map((item) => (
+                    <TouchableOpacity
+                      key={item.id}
+                      style={styles.modalMemoItem}
+                      onPress={() => {
+                        setShowMemosModal(false);
+                        router.push({
+                          pathname: "/memo/[id]",
+                          params: {
+                            id: item.id,
+                            title: item.title,
+                            content: item.content,
+                            category: item.category,
+                            timestamp: item.timestamp.toString(),
+                          },
+                        });
+                      }}
+                    >
+                      <Text style={styles.modalMemoTitle}>
+                        {item.title || "제목 없음"}
+                      </Text>
+                      <Text style={styles.modalMemoContent}>
+                        {item.category || "카테고리 없음"}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </ScrollView>
+              </View>
             ) : (
               <Text style={styles.noMemosText}>
                 해당 날짜에 메모가 없습니다.
               </Text>
             )}
+
             <TouchableOpacity
               style={styles.modalCloseButton}
               onPress={() => setShowMemosModal(false)}
@@ -431,8 +408,8 @@ export default function CalendarScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#F9EBDE", // Keep this for overall background
-    padding: 10, // Revert to original padding
+    backgroundColor: "#F9EBDE",
+    padding: 10,
   },
   header: {
     flexDirection: "row",
@@ -469,24 +446,24 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   daysContainer: {
-    flexDirection: "column", // Changed
-    flex: 1, // Added
-    borderWidth: 1, // ADD
-    borderColor: "#ccc", // ADD
+    flexDirection: "column",
+    flex: 1,
+    borderWidth: 1,
+    borderColor: "#ccc",
   },
   dayCell: {
-    width: `${100 / 7}%`, // Ensure it perfectly fits 7 columns
-    flex: 1, // Allow it to fill vertical space within the row
-    justifyContent: "flex-start", // Align to top
-    alignItems: "flex-start", // Align to left
+    width: `${100 / 7}%`,
+    flex: 1,
+    justifyContent: "flex-start",
+    alignItems: "flex-start",
     borderWidth: 1,
     borderColor: "#ccc",
     backgroundColor: "#fff",
-    padding: 5, // Add padding for the number
+    padding: 5,
   },
   calendarRow: {
     flexDirection: "row",
-    flex: 1, // Each row takes equal vertical space
+    flex: 1,
   },
   dayText: {
     fontSize: 18,
@@ -496,26 +473,27 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "rgba(0,0,0,0.5)", // Semi-transparent overlay
+    backgroundColor: "rgba(0,0,0,0.5)",
   },
   modalView: {
     margin: 20,
-    backgroundColor: "white", // White background for modal
+    backgroundColor: "white",
     borderRadius: 20,
     borderWidth: 2,
-    borderColor: "#815854", // Consistent border color
+    borderColor: "#815854",
     padding: 20,
     alignItems: "center",
     shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.25,
     shadowRadius: 4,
     elevation: 5,
-    maxHeight: "80%", // Limit modal height
-    width: "90%", // Limit modal width
+    maxHeight: "80%",
+    width: "90%",
+  },
+  listContainer: {
+    flex: 1,
+    width: "100%",
   },
   modalTitle: {
     fontSize: 20,
@@ -544,12 +522,8 @@ const styles = StyleSheet.create({
     textAlign: "center",
     padding: 20,
   },
-  modalFlatList: {
-    flex: 1, // Make FlatList take available space and be scrollable
-    width: "100%", // Ensure it takes full width of modal
-  },
   modalCloseButton: {
-    backgroundColor: "#815854", // Consistent button color
+    backgroundColor: "#815854",
     borderRadius: 10,
     padding: 10,
     elevation: 2,
@@ -562,23 +536,22 @@ const styles = StyleSheet.create({
   },
   memoCountContainer: {
     position: "absolute",
-    bottom: 5, // Adjust position as needed
-    right: 5, // Adjust position as needed
-    // backgroundColor: 'blue', // Removed
-    paddingHorizontal: 5, // Add horizontal padding
-    paddingVertical: 2, // Add vertical padding
+    bottom: 5,
+    right: 5,
+    paddingHorizontal: 5,
+    paddingVertical: 2,
     justifyContent: "center",
     alignItems: "center",
-    borderRadius: 5, // Adjust borderRadius for rectangular shape
+    borderRadius: 5,
   },
   memoCountText: {
-    color: "#A4193D", // Changed
-    fontSize: 14, // Increased
+    color: "#A4193D",
+    fontSize: 14,
     fontWeight: "bold",
   },
   calendarWrapper: {
-    flex: 1, // Take up available space
-    paddingVertical: 70, // Apply 70px vertical padding
-    backgroundColor: "#F9EBDE", // Apply background color
+    flex: 1,
+    paddingVertical: 70,
+    backgroundColor: "#F9EBDE",
   },
 });

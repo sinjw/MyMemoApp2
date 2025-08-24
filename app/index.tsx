@@ -21,9 +21,9 @@ interface Memo {
   title: string;
   content: string;
   category: string;
-  images?: { uri: string; tag: string }[]; // 이미지 배열 추가
+  images?: { uri: string; tag: string }[];
   timestamp: number;
-  isLiked?: boolean; // New property for liking/pinning
+  isLiked?: boolean;
 }
 
 export default function MemoListScreen() {
@@ -31,26 +31,25 @@ export default function MemoListScreen() {
   const [memos, setMemos] = useState<Memo[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
-  const [selectedMemoIds, setSelectedMemoIds] = useState<string[]>([]); // 선택된 메모 ID
-  const [isMultiSelectMode, setIsMultiSelectMode] = useState(false); // 다중 선택 모드 여부
-  const [showSearchInput, setShowSearchInput] = useState(false); // New state for search input visibility
-  const [showMenuModal, setShowMenuModal] = useState(false); // New state for menu modal visibility
+  const [selectedMemoIds, setSelectedMemoIds] = useState<string[]>([]);
+  const [isMultiSelectMode, setIsMultiSelectMode] = useState(false);
+  const [showSearchInput, setShowSearchInput] = useState(false);
+  const [showMenuModal, setShowMenuModal] = useState(false);
 
   const loadMemos = async () => {
     try {
       const storedMemos = await AsyncStorage.getItem("memos");
       if (storedMemos) {
         const parsedMemos: Memo[] = JSON.parse(storedMemos);
-        // Sort memos by liked status then by timestamp in descending order
+
         const sortedMemos = parsedMemos.sort((a, b) => {
-          // Prioritize liked memos
           if (a.isLiked && !b.isLiked) {
-            return -1; // a comes before b
+            return -1;
           }
           if (!a.isLiked && b.isLiked) {
-            return 1; // b comes before a
+            return 1;
           }
-          // If both are liked or both are not liked, sort by timestamp
+
           return b.timestamp - a.timestamp;
         });
         setMemos(sortedMemos);
@@ -63,8 +62,8 @@ export default function MemoListScreen() {
   useFocusEffect(
     useCallback(() => {
       loadMemos();
-      setSelectedMemoIds([]); // 화면 포커스 시 선택 초기화
-      setIsMultiSelectMode(false); // 화면 포커스 시 다중 선택 모드 해제
+      setSelectedMemoIds([]);
+      setIsMultiSelectMode(false);
     }, [])
   );
 
@@ -115,7 +114,7 @@ export default function MemoListScreen() {
                 JSON.stringify(remainingMemos)
               );
               Alert.alert("성공", "선택된 메모가 삭제되었습니다.");
-              loadMemos(); // 메모 목록 새로고침
+              loadMemos();
               setSelectedMemoIds([]);
               setIsMultiSelectMode(false);
             } catch (error) {
@@ -137,7 +136,7 @@ export default function MemoListScreen() {
         memo.id === id ? { ...memo, isLiked: !memo.isLiked } : memo
       );
       await AsyncStorage.setItem("memos", JSON.stringify(updatedMemos));
-      loadMemos(); // Reload memos to reflect sorting
+      loadMemos();
     } catch (error) {
       console.error("Failed to toggle like status:", error);
       Alert.alert("오류", "좋아요 상태 변경에 실패했습니다.");
@@ -162,7 +161,7 @@ export default function MemoListScreen() {
                 title: item.title,
                 content: item.content,
                 category: item.category,
-                timestamp: item.timestamp.toString(), // timestamp는 숫자로 저장되므로 문자열로 변환
+                timestamp: item.timestamp.toString(),
               },
             })
       }
@@ -179,9 +178,17 @@ export default function MemoListScreen() {
         </View>
       )}
       <View style={styles.memoContentContainer}>
-        <Text style={styles.memoTitle}>{item.title || "제목 없음"}</Text>
+        <Text style={styles.memoTitle} numberOfLines={1} ellipsizeMode="tail">
+          {item.title || "제목 없음"}
+        </Text>
         {item.category ? (
-          <Text style={styles.memoCategory}>{item.category}</Text>
+          <Text
+            style={styles.memoCategory}
+            numberOfLines={1}
+            ellipsizeMode="tail"
+          >
+            {item.category}
+          </Text>
         ) : null}
         <Text style={styles.memoContent} numberOfLines={1}>
           {item.content}
@@ -192,10 +199,9 @@ export default function MemoListScreen() {
       </View>
       <TouchableOpacity
         style={styles.likeButton}
-        onPress={() => toggleLike(item.id)} // New handler
+        onPress={() => toggleLike(item.id)}
       >
         <Text style={styles.likeButtonText}>{item.isLiked ? "♥" : "♡"}</Text>{" "}
-        {/* Star icon */}
       </TouchableOpacity>
     </TouchableOpacity>
   );
@@ -208,7 +214,7 @@ export default function MemoListScreen() {
             source={require("@/assets/images/MyMemoLogo.png")}
             style={styles.myMemoLogoImage}
           />
-          <Text style={styles.headerTitle}>for Heagun ver.</Text>
+
           <TouchableOpacity
             style={styles.menuButton}
             onPress={() => setShowMenuModal(true)}
@@ -279,6 +285,7 @@ export default function MemoListScreen() {
         }
         style={styles.memoList}
         showsVerticalScrollIndicator={false} // Added
+        contentContainerStyle={{ paddingBottom: 40 }}
       />
       {isMultiSelectMode ? (
         <View style={styles.multiSelectButtonContainer}>
@@ -365,21 +372,21 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     justifyContent: "center",
     alignItems: "center",
-    elevation: 5, // Increased
+    elevation: 5,
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 }, // Increased height for more visible shadow
-    shadowOpacity: 0.3, // Increased
-    shadowRadius: 5, // Increased
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 5,
   },
   searchButtonImage: {
-    width: 24, // Adjust as needed
-    height: 24, // Adjust as needed
+    width: 24,
+    height: 24,
     resizeMode: "contain",
   },
   searchInput: {
     backgroundColor: "#fff",
     padding: 10,
-    marginHorizontal: 0, // Adjusted
+    marginHorizontal: 0,
     marginBottom: 10,
     borderRadius: 10,
     fontSize: 16,
@@ -388,19 +395,19 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.1,
     shadowRadius: 2,
-    flex: 1, // Added
-    marginRight: 10, // Added for spacing between input and button
+    flex: 1,
+    marginRight: 10,
   },
   memoCategory: {
     fontSize: 12,
-    color: "#815854", // Changed
+    color: "#815854",
     marginBottom: 5,
     fontWeight: "bold",
   },
   header: {
     fontSize: 28,
     fontWeight: "bold",
-    // textAlign: "center",
+
     marginVertical: 20,
     color: "#333",
     flex: 1,
@@ -409,8 +416,8 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: "bold",
     color: "#815854",
-    flex: 1, // To take up available space between logo and menu button
-    textAlign: "center", // Center the text
+    flex: 1,
+    textAlign: "center",
   },
   menuButton: {
     padding: 10,
@@ -426,27 +433,27 @@ const styles = StyleSheet.create({
   calendarButtonText: {
     fontSize: 16,
     fontWeight: "bold",
-    color: "#815854", // Consistent with other text
+    color: "#815854",
   },
   myMemoLogoImage: {
-    width: 200, // Changed
-    height: 70, // Changed
+    width: 200,
+    height: 70,
     resizeMode: "contain",
-    marginRight: 10, // Add some spacing
+    marginRight: 10,
   },
   headerTopRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 10, // Add some spacing
+    marginBottom: 10,
   },
   headerSearchRow: {
     flexDirection: "row",
     justifyContent: "flex-end",
-    marginBottom: 10, // Add some spacing
+    marginBottom: 10,
   },
   memoItem: {
-    backgroundColor: "#fff", // Changed
+    backgroundColor: "#fff",
     padding: 15,
     marginHorizontal: 15,
     marginVertical: 8,
@@ -456,9 +463,9 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
-    borderWidth: 2, // Changed
-    borderColor: "#815854", // Added
-    borderStyle: "dashed", // Changed
+    borderWidth: 2,
+    borderColor: "#815854",
+    borderStyle: "dashed",
   },
   memoTitle: {
     fontSize: 18,
@@ -481,37 +488,37 @@ const styles = StyleSheet.create({
     paddingHorizontal: 15,
   },
   categoryButton: {
-    backgroundColor: "white", // Changed
+    backgroundColor: "white",
     paddingVertical: 8,
     paddingHorizontal: 15,
     borderRadius: 20,
     marginRight: 10,
-    borderWidth: 1, // Added
-    borderColor: "#815854", // Added
+    borderWidth: 1,
+    borderColor: "#815854",
   },
   selectedCategoryButton: {
-    backgroundColor: "#815854", // Changed
+    backgroundColor: "#815854",
   },
   categoryButtonText: {
-    color: "#815854", // Changed
+    color: "#815854",
     fontSize: 14,
     fontWeight: "bold",
   },
   selectedCategoryButtonText: {
-    color: "#fff", // Changed
+    color: "#fff",
   },
   addButton: {
     position: "absolute",
     bottom: 130,
     right: 30,
-    backgroundColor: "#F5F5DC", // Beige color
+    backgroundColor: "#F5F5DC",
     width: 60,
     height: 60,
-    borderRadius: 15, // 15px radius
+    borderRadius: 15,
     justifyContent: "center",
     alignItems: "center",
     elevation: 5,
-    shadowColor: "#000", // Shadow color
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 5,
@@ -522,8 +529,8 @@ const styles = StyleSheet.create({
     lineHeight: 30,
   },
   addButtonImage: {
-    width: 40, // Adjust as needed
-    height: 40, // Adjust as needed
+    width: 40,
+    height: 40,
     resizeMode: "contain",
   },
   emptyContainer: {
@@ -539,8 +546,8 @@ const styles = StyleSheet.create({
     marginTop: 10,
   },
   selectedMemoItem: {
-    backgroundColor: "#e6f7ff", // 선택된 메모 배경색
-    borderColor: "#007AFF", // 선택된 메모 테두리색
+    backgroundColor: "#e6f7ff",
+    borderColor: "#007AFF",
     borderWidth: 1,
   },
   checkbox: {
@@ -569,9 +576,9 @@ const styles = StyleSheet.create({
     borderColor: "#007AFF",
   },
   memoContentContainer: {
-    marginLeft: 30, // 체크박스 공간 확보
+    marginLeft: 30,
     flex: 1,
-    marginRight: 40, // Added to make space for like button
+    marginRight: 40,
   },
   deleteButton: {
     backgroundColor: "#dc3545",
@@ -590,11 +597,11 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontSize: 18,
     fontWeight: "bold",
-    textAlign: "center", // Added
+    textAlign: "center",
   },
   multiSelectButtonContainer: {
     position: "absolute",
-    bottom: 30,
+    bottom: 80,
     right: 30,
     flexDirection: "row",
     justifyContent: "flex-end",
@@ -623,14 +630,14 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "rgba(0,0,0,0.5)", // Semi-transparent overlay
+    backgroundColor: "rgba(0,0,0,0.5)",
   },
   modalView: {
     margin: 20,
-    backgroundColor: "#F5F5DC", // Memo add button background color
+    backgroundColor: "#F5F5DC",
     borderRadius: 20,
-    borderWidth: 2, // Border width
-    borderColor: "#815854", // Memo list item border color
+    borderWidth: 2,
+    borderColor: "#815854",
     padding: 35,
     alignItems: "center",
     shadowColor: "#000",
@@ -643,7 +650,7 @@ const styles = StyleSheet.create({
     elevation: 5,
   },
   modalButton: {
-    backgroundColor: "#815854", // Consistent with other buttons
+    backgroundColor: "#815854",
     borderRadius: 10,
     padding: 10,
     elevation: 2,
@@ -655,7 +662,7 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   modalCloseButton: {
-    backgroundColor: "#6c757d", // A neutral color for close
+    backgroundColor: "#6c757d",
     borderRadius: 10,
     padding: 10,
     elevation: 2,
@@ -673,6 +680,6 @@ const styles = StyleSheet.create({
   },
   likeButtonText: {
     fontSize: 30,
-    color: "#A4193D", // Gold color for liked star
+    color: "#A4193D",
   },
 });

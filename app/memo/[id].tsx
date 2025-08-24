@@ -12,8 +12,8 @@ import {
   KeyboardAvoidingView,
   Modal,
   Platform,
-  ScrollView as RNScrollView,
   SafeAreaView,
+  ScrollView,
   StyleSheet,
   Text,
   TextInput,
@@ -34,7 +34,7 @@ interface Memo {
   title: string;
   content: string;
   category: string;
-  images?: ImageAsset[]; // 이미지 배열 추가
+  images?: ImageAsset[];
   timestamp: number;
 }
 
@@ -45,7 +45,7 @@ export default function MemoDetailScreen() {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [category, setCategory] = useState("");
-  const [images, setImages] = useState<ImageAsset[]>([]); // 이미지 상태 추가
+  const [images, setImages] = useState<ImageAsset[]>([]);
   const [isEditing, setIsEditing] = useState(false);
   const [selectedImage, setSelectedImage] = useState<ImageAsset | null>(null);
 
@@ -68,7 +68,7 @@ export default function MemoDetailScreen() {
           setTitle(foundMemo.title);
           setContent(foundMemo.content);
           setCategory(foundMemo.category);
-          setImages(foundMemo.images || []); // 이미지 불러오기
+          setImages(foundMemo.images || []);
         }
       }
     } catch (error) {
@@ -105,7 +105,7 @@ export default function MemoDetailScreen() {
 
     let result = await ImagePicker.launchCameraAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: false, // No editing for instant capture
+      allowsEditing: false,
       quality: 1,
     });
 
@@ -288,7 +288,7 @@ export default function MemoDetailScreen() {
         style={styles.keyboardAvoidingView}
         behavior={Platform.OS === "ios" ? "padding" : "height"}
       >
-        <RNScrollView
+        <ScrollView
           contentContainerStyle={styles.scrollContentContainer}
           showsHorizontalScrollIndicator={false}
         >
@@ -386,7 +386,7 @@ export default function MemoDetailScreen() {
               editable={isEditing}
             />
           </TouchableOpacity>
-        </RNScrollView>
+        </ScrollView>
       </KeyboardAvoidingView>
 
       <Modal
@@ -396,8 +396,6 @@ export default function MemoDetailScreen() {
       >
         {selectedImage && (
           <View style={styles.imageViewerModalContainer}>
-            {" "}
-            {/* New container for ImageViewer and footer */}
             <ImageViewer
               imageUrls={images.map((img) => ({
                 url: img.uri,
@@ -410,8 +408,8 @@ export default function MemoDetailScreen() {
                   ? images.findIndex((img) => img.id === selectedImage.id)
                   : 0
               }
-              onChange={(index) => setCurrentImageViewerIndex(index || 0)} // Track current image index
-              style={{ flex: 1 }} // Ensure ImageViewer fills the container
+              onChange={(index) => setCurrentImageViewerIndex(index || 0)}
+              style={{ flex: 1 }}
             />
             <View style={styles.imageModalFooter}>
               <CollapsibleText title="▲">
@@ -433,7 +431,7 @@ const styles = StyleSheet.create({
     paddingLeft: 10,
     paddingRight: 10,
     paddingTop: 40,
-    paddingBottom: 20, // Keep consistent with original vertical padding
+    paddingBottom: 20,
   },
   header: {
     fontSize: 24,
@@ -491,7 +489,7 @@ const styles = StyleSheet.create({
     padding: 15,
     borderRadius: 10,
     fontSize: 16,
-    height: 600,
+    minHeight: 500,
     marginBottom: 5,
     elevation: 2,
     shadowColor: "#000",
@@ -504,6 +502,7 @@ const styles = StyleSheet.create({
   },
   scrollContentContainer: {
     flexGrow: 1,
+    marginBottom: 40,
   },
   inputWrapper: {
     marginBottom: 5,
@@ -513,12 +512,12 @@ const styles = StyleSheet.create({
     padding: 10,
     borderRadius: 10,
     alignItems: "center",
-    flex: 4, // Add this
+    flex: 4,
   },
   imageButtonContainer: {
     flexDirection: "row",
     justifyContent: "space-around",
-    marginBottom: 15, // Moved from addImageButton
+    marginBottom: 15,
   },
   takePhotoButton: {
     backgroundColor: "#815854",
@@ -542,16 +541,16 @@ const styles = StyleSheet.create({
   },
 
   thumbnailImage: {
-    width: "100%", // Fill the wrapper
-    height: "100%", // Fill the wrapper
-    borderRadius: 50, // Keep image circular
+    width: "100%",
+    height: "100%",
+    borderRadius: 50,
   },
   circularImageWrapper: {
     width: 100,
     height: 100,
     borderRadius: 50,
     borderWidth: 2,
-    borderColor: "#815854", // Site's color
+    borderColor: "#815854",
     borderStyle: "dashed",
     justifyContent: "center",
     alignItems: "center",
@@ -621,7 +620,7 @@ const styles = StyleSheet.create({
   },
   imageViewerModalContainer: {
     flex: 1,
-    position: "relative", // For absolute positioning of the footer
-    backgroundColor: "black", // Background for the viewer
+    position: "relative",
+    backgroundColor: "black",
   },
 });

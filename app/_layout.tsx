@@ -1,14 +1,14 @@
 import { Stack } from "expo-router";
-import { View, StyleSheet } from 'react-native'; // Import View and StyleSheet
+import { View, StyleSheet } from "react-native";
 
 export default function RootLayout() {
   return (
-    <View style={styles.rootContainer}> {/* New View wrapper */}
+    <View style={styles.rootContainer}>
       <Stack screenOptions={{ headerShown: false }}>
         <Stack.Screen name="index" />
         <Stack.Screen name="create" />
-        <Stack.Screen name="calendar" /> {/* Add calendar screen to stack for explicit registration */}
-        <Stack.Screen name="memo/[id]" /> {/* Add memo detail screen */}
+        <Stack.Screen name="calendar" />
+        <Stack.Screen name="memo/[id]" />
       </Stack>
     </View>
   );
@@ -17,6 +17,6 @@ export default function RootLayout() {
 const styles = StyleSheet.create({
   rootContainer: {
     flex: 1,
-    backgroundColor: '#F9EBDE', // Set desired background color here
+    backgroundColor: "#F9EBDE",
   },
 });
